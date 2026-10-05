@@ -291,7 +291,7 @@ function liveView(snap: CacheSnap, ttl: CacheTtl, breaker: CacheBreaker | null, 
   if (breaker?.kind === 'compact') return { color: YELLOW, status: '▲ Compacted, cache resets', cost: 'next message rebuilds it' }
   if (left <= 0) return { color: RED, status: `▲ Cache expired ${fmtAgo(-left)}`, cost: `next message ${coldCost} (was ${warmCost})` }
   if (left < (ttl === '1h' ? 10 * 60_000 : 90_000)) {
-    return { color: YELLOW, status: `● Cache expires in ${fmtLeft(left)}`, cost: `next message ${warmCost}, after that ${coldCost}` }
+    return { color: YELLOW, status: `● Cache expires in ${fmtLeft(left)}`, cost: `next message ${warmCost}, ${coldCost} once it expires` }
   }
 
   return { color: GREEN, status: `● Cache warm · ${fmtLeft(left)} left`, cost: `next message ${warmCost}` }
@@ -300,7 +300,7 @@ function liveView(snap: CacheSnap, ttl: CacheTtl, breaker: CacheBreaker | null, 
 // Every state the band can be in, with typical numbers (Opus 5.5, ~190k tokens of context).
 const DEMO: Record<CacheDemo, View> = {
   warm: { color: GREEN, status: '● Cache warm · 47 min left', cost: 'next message ~$0.10' },
-  expiring: { color: YELLOW, status: '● Cache expires in 1:12', cost: 'next message ~$0.10, after that ~$1.60' },
+  expiring: { color: YELLOW, status: '● Cache expires in 1:12', cost: 'next message ~$0.10, ~$1.60 once it expires' },
   expired: { color: RED, status: '▲ Cache expired 4m ago', cost: 'next message ~$1.60 (was ~$0.10)' },
   model: { color: RED, status: '▲ Model changed, cache resets', cost: 'next message ~$0.80' },
   compacted: { color: YELLOW, status: '▲ Compacted, cache resets', cost: 'next message rebuilds it' },

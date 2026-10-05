@@ -19,7 +19,7 @@ const props = {
 
 const STATES: Array<[string, string]> = [
   ['warm', 'Cache warm · 47 min left · next message ~$0.10'],
-  ['expiring', 'Cache expires in 1:12 · next message ~$0.10, after that ~$1.60'],
+  ['expiring', 'Cache expires in 1:12 · next message ~$0.10, ~$1.60 once it expires'],
   ['expired', 'Cache expired 4m ago · next message ~$1.60 (was ~$0.10)'],
   ['model', 'Model changed, cache resets · next message ~$0.80'],
   ['compacted', 'Compacted, cache resets · next message rebuilds it'],
@@ -100,7 +100,7 @@ test('reads the TTL from the transcript, counts down from the request start, and
 
   // Ten minutes out, it warns, with what waiting would cost.
   await clock.set(t0 + 52 * 60_000)
-  expect(await band()).toContain('Cache expires in 8:00 · next message ~$0.07, after that ~$1.56')
+  expect(await band()).toContain('Cache expires in 8:00 · next message ~$0.07, ~$1.56 once it expires')
 
   // Past the hour, the whole context is written again.
   await clock.set(t0 + 64 * 60_000)
