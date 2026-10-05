@@ -1,0 +1,11 @@
+{
+  "name": "cache-watch",
+  "version": "0.1.0",
+  "description": "A band above the prompt that counts down to your prompt cache expiring and shows what your next message will cost",
+  "author": { "name": "Ishu Agrawal", "url": "https://github.com/ishuagrawal" },
+  "homepage": "https://github.com/ishuagrawal/cache-watch",
+  "repository": "https://github.com/ishuagrawal/cache-watch",
+  "license": "MIT",
+  "keywords": ["mod", "prompt-cache", "cost", "ttl"],
+  "types": "./types/index.d.ts"
+}
