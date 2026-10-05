@@ -2,13 +2,13 @@
   "name": "cache-watch",
   "owner": { "name": "Ishu Agrawal", "url": "https://github.com/ishuagrawal" },
   "metadata": {
-    "description": "Know when your prompt cache expires, and what your next message will cost"
+    "description": "Know when your prompt cache expires, and what that costs your next message"
   },
   "plugins": [
     {
       "name": "cache-watch",
       "source": "./plugin",
-      "description": "A band above the prompt that counts down to your prompt cache expiring and shows what your next message will cost",
+      "description": "A band above the prompt that counts down to your prompt cache expiring and shows what it costs your next message",
       "version": "0.1.0",
       "category": "productivity"
     }

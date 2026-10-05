@@ -12,8 +12,6 @@ export type CacheSnap = {
   cacheRead: number
   cacheWrite: number
   output: number
-  /** Mean output tokens over the last few main-thread requests. */
-  avgOutput: number
 }
 
 export type CacheBreaker = { kind: 'model' | 'compact'; detail: string; toModel?: string }

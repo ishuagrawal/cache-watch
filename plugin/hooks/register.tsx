@@ -17,22 +17,22 @@ const demoAtom = atom({ plugin: 'cache-watch', key: 'demo' } as const, null)
 // Anthropic first-party API list prices as of 2026-09-25. Bedrock and Vertex price differently.
 // Order matters: longer ids first so 'claude-opus-5-5' wins over 'claude-opus-5'.
 
-type Price = { input: number; output: number; cacheRead: number }
+type Price = { input: number; cacheRead: number }
 
 const PRICES: ReadonlyArray<readonly [string, Price]> = [
-  ['claude-fable-5-1', { input: 10, output: 50, cacheRead: 0.25 }],
-  ['claude-mythos-5-1', { input: 10, output: 50, cacheRead: 0.25 }],
-  ['claude-fable-5', { input: 10, output: 50, cacheRead: 1 }],
-  ['claude-mythos-5', { input: 10, output: 50, cacheRead: 1 }],
-  ['claude-opus-5-5', { input: 4, output: 20, cacheRead: 0.2 }],
-  ['claude-opus-5', { input: 5, output: 25, cacheRead: 0.5 }],
-  ['claude-opus-4-8', { input: 5, output: 25, cacheRead: 0.5 }],
-  ['claude-opus-4-7', { input: 5, output: 25, cacheRead: 0.5 }],
-  ['claude-opus-4-6', { input: 5, output: 25, cacheRead: 0.5 }],
-  ['claude-sonnet-5-5', { input: 2, output: 10, cacheRead: 0.2 }],
-  ['claude-sonnet-5', { input: 2, output: 10, cacheRead: 0.2 }],
-  ['claude-sonnet-4-6', { input: 3, output: 15, cacheRead: 0.3 }],
-  ['claude-haiku-4-5', { input: 1, output: 5, cacheRead: 0.1 }],
+  ['claude-fable-5-1', { input: 10, cacheRead: 0.25 }],
+  ['claude-mythos-5-1', { input: 10, cacheRead: 0.25 }],
+  ['claude-fable-5', { input: 10, cacheRead: 1 }],
+  ['claude-mythos-5', { input: 10, cacheRead: 1 }],
+  ['claude-opus-5-5', { input: 4, cacheRead: 0.2 }],
+  ['claude-opus-5', { input: 5, cacheRead: 0.5 }],
+  ['claude-opus-4-8', { input: 5, cacheRead: 0.5 }],
+  ['claude-opus-4-7', { input: 5, cacheRead: 0.5 }],
+  ['claude-opus-4-6', { input: 5, cacheRead: 0.5 }],
+  ['claude-sonnet-5-5', { input: 2, cacheRead: 0.2 }],
+  ['claude-sonnet-5', { input: 2, cacheRead: 0.2 }],
+  ['claude-sonnet-4-6', { input: 3, cacheRead: 0.3 }],
+  ['claude-haiku-4-5', { input: 1, cacheRead: 0.1 }],
 ]
 
 const FALLBACK_PRICE = PRICES[4][1]
@@ -45,7 +45,7 @@ function priceFor(model: string, isFast: boolean): { price: Price; isKnown: bool
   const k = isFast ? 2 : 1
 
   return {
-    price: { input: base.input * k, output: base.output * k, cacheRead: base.cacheRead * k },
+    price: { input: base.input * k, cacheRead: base.cacheRead * k },
     isKnown: hit !== undefined,
   }
 }
@@ -127,9 +127,6 @@ function parseTranscript(text: string): Parsed {
     else if ((cc?.ephemeral_5m_input_tokens ?? 0) > 0) ttl = '5m'
   }
 
-  const recent = groups.slice(-6).map(g => g.entry.message?.usage?.output_tokens ?? 0)
-  const avgOutput = recent.reduce((a, b) => a + b, 0) / Math.max(1, recent.length)
-
   const u = lastGroup.entry.message?.usage ?? {}
   const lastCc = u.cache_creation
   const ownTtl: CacheTtl | null =
@@ -149,7 +146,6 @@ function parseTranscript(text: string): Parsed {
       cacheRead: u.cache_read_input_tokens ?? 0,
       cacheWrite: u.cache_creation_input_tokens ?? 0,
       output: u.output_tokens ?? 0,
-      avgOutput,
     },
     ttl,
     isCompactedAfter,
@@ -196,7 +192,7 @@ function shortModel(model: string): string {
 
 // ── cost model ───────────────────────────────────────────────────────────────
 
-type Estimate = { warm: number; cold: number; out: number; context: number; isPriceKnown: boolean }
+type Estimate = { warm: number; cold: number; context: number; isPriceKnown: boolean }
 
 function estimate(snap: CacheSnap, ttl: CacheTtl, draftChars: number, model = snap.model): Estimate {
   const { price, isKnown } = priceFor(model, snap.isFast)
@@ -209,7 +205,6 @@ function estimate(snap: CacheSnap, ttl: CacheTtl, draftChars: number, model = sn
   return {
     warm: (prefix * price.cacheRead) / 1e6 + tail * write,
     cold: (prefix + tail) * write,
-    out: (snap.avgOutput * price.output) / 1e6,
     context: prefix + tail,
     isPriceKnown: isKnown,
   }
@@ -279,14 +274,14 @@ const RED = '#ef4444'
 function liveView(snap: CacheSnap, ttl: CacheTtl, breaker: CacheBreaker | null, tick: CacheTick, isWorking: boolean): View {
   const left = snap.startedAt + TTL_MS[ttl] - tick.now
   const est = estimate(snap, ttl, tick.draftChars)
-  const warmCost = `~${fmtUsd(est.warm + est.out)}`
-  const coldCost = `~${fmtUsd(est.cold + est.out)}`
+  const warmCost = `~${fmtUsd(est.warm)}`
+  const coldCost = `~${fmtUsd(est.cold)}`
 
   if (isWorking) return { color: GREEN, status: '● Cache warm', cost: 'Claude is working' }
   if (breaker?.kind === 'model') {
     const switched = estimate(snap, ttl, tick.draftChars, breaker.toModel)
 
-    return { color: RED, status: '▲ Model changed, cache resets', cost: `next message ~${fmtUsd(switched.cold + switched.out)}` }
+    return { color: RED, status: '▲ Model changed, cache resets', cost: `next message ~${fmtUsd(switched.cold)}` }
   }
   if (breaker?.kind === 'compact') return { color: YELLOW, status: '▲ Compacted, cache resets', cost: 'next message rebuilds it' }
   if (left <= 0) return { color: RED, status: `▲ Cache expired ${fmtAgo(-left)}`, cost: `next message ${coldCost} (was ${warmCost})` }
@@ -299,10 +294,10 @@ function liveView(snap: CacheSnap, ttl: CacheTtl, breaker: CacheBreaker | null, 
 
 // Every state the band can be in, with typical numbers (Opus 5.5, ~190k tokens of context).
 const DEMO: Record<CacheDemo, View> = {
-  warm: { color: GREEN, status: '● Cache warm · 47 min left', cost: 'next message ~$0.10' },
-  expiring: { color: YELLOW, status: '● Cache expires in 1:12', cost: 'next message ~$0.10, ~$1.60 once it expires' },
-  expired: { color: RED, status: '▲ Cache expired 4m ago', cost: 'next message ~$1.60 (was ~$0.10)' },
-  model: { color: RED, status: '▲ Model changed, cache resets', cost: 'next message ~$0.80' },
+  warm: { color: GREEN, status: '● Cache warm · 47 min left', cost: 'next message ~$0.05' },
+  expiring: { color: YELLOW, status: '● Cache expires in 1:12', cost: 'next message ~$0.05, ~$1.53 once it expires' },
+  expired: { color: RED, status: '▲ Cache expired 4m ago', cost: 'next message ~$1.53 (was ~$0.05)' },
+  model: { color: RED, status: '▲ Model changed, cache resets', cost: 'next message ~$0.77' },
   compacted: { color: YELLOW, status: '▲ Compacted, cache resets', cost: 'next message rebuilds it' },
   working: { color: GREEN, status: '● Cache warm', cost: 'Claude is working' },
 }

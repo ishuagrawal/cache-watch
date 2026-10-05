@@ -18,10 +18,10 @@ const props = {
 }
 
 const STATES: Array<[string, string]> = [
-  ['warm', 'Cache warm · 47 min left · next message ~$0.10'],
-  ['expiring', 'Cache expires in 1:12 · next message ~$0.10, ~$1.60 once it expires'],
-  ['expired', 'Cache expired 4m ago · next message ~$1.60 (was ~$0.10)'],
-  ['model', 'Model changed, cache resets · next message ~$0.80'],
+  ['warm', 'Cache warm · 47 min left · next message ~$0.05'],
+  ['expiring', 'Cache expires in 1:12 · next message ~$0.05, ~$1.53 once it expires'],
+  ['expired', 'Cache expired 4m ago · next message ~$1.53 (was ~$0.05)'],
+  ['model', 'Model changed, cache resets · next message ~$0.77'],
   ['compacted', 'Compacted, cache resets · next message rebuilds it'],
   ['working', 'Cache warm · Claude is working'],
 ]
@@ -96,13 +96,13 @@ test('reads the TTL from the transcript, counts down from the request start, and
 
   // Warm: the hour runs from when the request started, not when the reply landed.
   await clock.set(t0 + 13 * 60_000)
-  expect(await band()).toContain('Cache warm · 47 min left · next message ~$0.07')
+  expect(await band()).toContain('Cache warm · 47 min left · next message ~$0.05')
 
   // Ten minutes out, it warns, with what waiting would cost.
   await clock.set(t0 + 52 * 60_000)
-  expect(await band()).toContain('Cache expires in 8:00 · next message ~$0.07, ~$1.56 once it expires')
+  expect(await band()).toContain('Cache expires in 8:00 · next message ~$0.05, ~$1.54 once it expires')
 
   // Past the hour, the whole context is written again.
   await clock.set(t0 + 64 * 60_000)
-  expect(await band()).toContain('Cache expired 4m ago · next message ~$1.56 (was ~$0.07)')
+  expect(await band()).toContain('Cache expired 4m ago · next message ~$1.54 (was ~$0.05)')
 })

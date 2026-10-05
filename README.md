@@ -4,7 +4,7 @@
 
 # cache-watch
 
-**Know when your Claude Code prompt cache expires, and what your next message will cost.**
+**Know when your Claude Code prompt cache expires, and what that costs your next message.**
 
 Claude Code caches your conversation so each message pays full price only for what's new. The cache expires 5 minutes or 1 hour after its last use, depending on your account. After that, your next message rewrites the whole conversation, which can cost about 15× more late in a long session. cache-watch adds a one-line band above the prompt that counts down to that moment.
 
@@ -12,7 +12,7 @@ Claude Code caches your conversation so each message pays full price only for wh
 
 - **Live countdown** to the cache expiring, in the terminal and the desktop app
 - **Your account's real TTL**, read from the API's own responses rather than guessed
-- **Next-message cost**, and what it will be once the cache expires
+- **Next-message cache cost**, and what it will be once the cache expires
 - **Warnings** for anything that resets the cache: expiry, switching models, `/compact`
 
 ## Requirements
@@ -50,7 +50,7 @@ The band needs no setup. It changes with the cache:
 
 | State | Shown when |
 | --- | --- |
-| 🟢 **Warm** | The cache is live. Shows the time left and the next message's cost |
+| 🟢 **Warm** | The cache is live. Shows the time left and the next message's cache cost |
 | 🟡 **Expiring** | Under 10 min left on a 1-hour cache, or 90 s on a 5-minute one |
 | 🔴 **Expired** | The cache is gone, so the next message rewrites it |
 | 🔴 **Model changed** | A different model can't reuse the old cache |
@@ -69,19 +69,19 @@ The band needs no setup. It changes with the cache:
 
 - **TTL:** each API response records its cache writes split by lifetime (`ephemeral_1h_input_tokens` / `ephemeral_5m_input_tokens`). Claude Code saves those responses to the session transcript, and cache-watch reads the newest one after every turn.
 - **Countdown:** the cache's lifetime runs from the *start* of the request that last used it, so the timer starts there too.
-- **Cost:** a warm message pays a cache read on the existing context, plus a cache write on the new part. That write is 1.25× the input price for a 5-minute cache and 2× for 1 hour. An expired cache means the whole context is written again. Output is estimated from your recent replies.
+- **Cost:** a warm message pays a cache read on the existing context, plus a cache write on the new part. That write is 1.25× the input price for a 5-minute cache and 2× for 1 hour. An expired cache means the whole context is written again. Output isn't included: it costs the same whether the cache is warm or not, and depends on what you ask.
 
 <details>
 <summary>Prices used (per million tokens, Anthropic API list prices, September 2026)</summary>
 
-| Model | Input | Output | Cache read |
-| --- | --- | --- | --- |
-| Fable 5.1 | $10 | $50 | $0.25 |
-| Opus 5.5 | $4 | $20 | $0.20 |
-| Opus 5 · 4.8 · 4.7 · 4.6 | $5 | $25 | $0.50 |
-| Sonnet 5.5 · 5 | $2 | $10 | $0.20 |
-| Sonnet 4.6 | $3 | $15 | $0.30 |
-| Haiku 4.5 | $1 | $5 | $0.10 |
+| Model | Input | Cache read |
+| --- | --- | --- |
+| Fable 5.1 | $10 | $0.25 |
+| Opus 5.5 | $4 | $0.20 |
+| Opus 5 · 4.8 · 4.7 · 4.6 | $5 | $0.50 |
+| Sonnet 5.5 · 5 | $2 | $0.20 |
+| Sonnet 4.6 | $3 | $0.30 |
+| Haiku 4.5 | $1 | $0.10 |
 
 Fast mode is billed at 2×. Prices live in `PRICES` in [`plugin/hooks/register.tsx`](./plugin/hooks/register.tsx).
 

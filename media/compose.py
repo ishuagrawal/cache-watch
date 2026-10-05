@@ -29,7 +29,7 @@ STATE = {
     'red': (239, 68, 68),
 }
 
-HERO = ('warm', 'green', 'Warm', 'Time left on the cache, and what your next message will cost')
+HERO = ('warm', 'green', 'Warm', 'Time left on the cache, and what it costs your next message')
 STRIPS = [
     ('expiring', 'yellow', 'Expiring', 'Under 10 minutes left on a 1-hour cache, or 90 seconds on a 5-minute one'),
     ('expired', 'red', 'Expired', 'The cache is gone: your next message pays to rebuild it'),
@@ -121,7 +121,7 @@ f_mark = font(38, 700)
 draw.text((TX, y), 'cache', font=f_mark, fill=ORANGE)
 draw.text((TX + draw.textlength('cache', font=f_mark), y), '-watch', font=f_mark, fill=TEXT)
 y += 56 * S
-draw.text((TX, y), 'Know when your prompt cache expires, and what your next message will cost.',
+draw.text((TX, y), 'Know when your prompt cache expires, and what that costs your next message.',
           font=font(17, 450), fill=TEXT)
 y += 28 * S
 f_note = font(13.5)
